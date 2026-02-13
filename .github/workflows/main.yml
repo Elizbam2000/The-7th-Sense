@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -23,6 +24,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      # ติดตั้ง Flutter เวอร์ชันเสถียร
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -30,24 +32,32 @@ jobs:
           flutter-version: '3.27.1'
           cache: true
 
+      # ติดตั้ง Dependencies รวมถึง python-dotenv เพื่ออ่านไฟล์ API
       - name: Install Dependencies
         run: |
           pip install flet google-generativeai cookiecutter python-dotenv
 
-      # สร้างไฟล์ .env จาก GitHub Secrets ก่อนเริ่ม Build
-      - name: Create .env file from Secrets
+      # สร้างไฟล์ api.env จาก GitHub Secrets (ใช้ชื่อนี้เพื่อให้ Flet แพ็กเข้า APK ได้ชัวร์)
+      - name: Create API configuration file
         run: |
-          echo "GEMINI_API_KEYS=${{ secrets.GEMINI_API_KEYS }}" > .env
+          echo "GEMINI_API_KEYS=${{ secrets.GEMINI_API_KEYS }}" > api.env
 
+      # ตรวจสอบไอคอนแอป
       - name: Verify Icon
         run: |
-          if [ -f "assets/icon.png" ]; then echo "✅ Icon found"; else exit 1; fi
+          if [ -f "assets/icon.png" ]; then
+            echo "✅ Icon found"
+          else
+            echo "❌ Error: assets/icon.png not found!"
+            exit 1
+          fi
 
-      # สำคัญมาก: เพิ่ม --include-dots เพื่อให้ Flet ยอมดึงไฟล์ .env เข้าไปใน APK
+      # ขั้นตอนการ Build APK (ตัด --include-dots ออกเพื่อแก้ปัญหา Unrecognized Arguments)
       - name: Build Android APK
         run: |
-          yes | flet build apk --product "The 7th Sense" --org "com.nithoria.the7thsense" --include-dots
+          yes | flet build apk --product "The 7th Sense" --org "com.nithoria.the7thsense"
 
+      # อัปโหลดไฟล์ APK เพื่อให้ปรากฏปุ่มดาวน์โหลดในหน้า Artifacts
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
