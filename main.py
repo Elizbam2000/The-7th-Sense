@@ -6,6 +6,8 @@ import os
 import time
 import asyncio
 import re
+from dotenv import load_dotenv
+
 
 # ตรวจสอบ SDK
 try:
@@ -18,8 +20,30 @@ except ImportError:
 # 1. CONFIGURATION & DATA LOADING
 # ==============================================================================
 
-raw_keys = os.getenv("GEMINI_API_KEYS", "")
-API_KEYS = [k.strip() for k in raw_keys.split(",") if k.strip()] if raw_keys else []
+# สั่งให้โหลดค่าจากไฟล์ .env ทันทีที่รัน
+load_dotenv()
+
+def get_api_keys():
+    # ลองดึงจากระบบปกติก่อน (สำหรับ PC)
+    raw_keys = os.getenv("GEMINI_API_KEYS", "")
+    
+    # ถ้าบนมือถือหาไม่เจอ ให้ลองเปิดไฟล์อ่านตรงๆ
+    if not raw_keys and os.path.exists(".env"):
+        try:
+            with open(".env", "r") as f:
+                for line in f:
+                    if line.startswith("GEMINI_API_KEYS="):
+                        raw_keys = line.split("=")[1].strip().strip('"').strip("'")
+                        break
+        except:
+            pass
+
+    if raw_keys:
+        return [k.strip() for k in raw_keys.split(",") if k.strip()]
+    return []
+
+# นำคีย์มาใช้ในโปรแกรม
+API_KEYS = get_api_keys()
 AI_MODEL_NAME = 'gemini-flash-latest' 
 
 def load_json_file(filename):
