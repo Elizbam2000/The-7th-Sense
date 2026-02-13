@@ -24,12 +24,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # ติดตั้ง Flutter เวอร์ชันที่เสถียร
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.27.1' # ระบุเวอร์ชันที่แน่นอนเพื่อความเสถียร
+          flutter-version: '3.27.1'
           cache: true
 
       - name: Install Dependencies
@@ -45,7 +44,15 @@ jobs:
             exit 1
           fi
 
-      # แก้ไข: เพิ่ม 'yes |' เพื่อตอบตกลงอัตโนมัติหากมีการถามเรื่อง SDK
       - name: Build Android APK
         run: |
+          # ใช้ yes | เพื่อตอบตกลงอัตโนมัติ
           yes | flet build apk --product "The 7th Sense" --org "com.nithoria.the7thsense"
+
+      # แก้ไขจุดนี้: ระบุ Path แบบเจาะจงให้ระบบหาไฟล์ APK เจอแน่นอน
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-7th-Sense-APK
+          path: build/apk/*.apk
+          if-no-files-found: error # ถ้าหาไฟล์ไม่เจอ ให้แจ้ง Error ทันทีเพื่อตรวจสอบง่ายขึ้น
