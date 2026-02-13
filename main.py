@@ -18,32 +18,39 @@ except ImportError:
 
 # ==============================================================================
 # 1. CONFIGURATION & DATA LOADING
+# =========================================================================
+# ==============================================================================
+# 1. CONFIGURATION & API KEY LOADING (แก้ไขเฉพาะส่วนนี้)
 # ==============================================================================
 
-# สั่งให้โหลดค่าจากไฟล์ .env ทันทีที่รัน
-load_dotenv()
+# พยายามโหลดไฟล์ .env หรือ api.env ถ้ามี (ต้องลง python-dotenv ใน requirements.txt ด้วย)
+load_dotenv("api.env") 
+load_dotenv(".env")
 
 def get_api_keys():
-    # 1. ลองดึงจากระบบปกติ (กรณีรันบนคอมพิวเตอร์)
+    """
+    ฟังก์ชันดึง API Keys ที่รองรับทั้งการรันบน PC และบน Android APK
+    """
+    # 1. ลองดึงจาก Environment Variable (สำหรับตอนรันบนคอมปกติ หรือ GitHub Actions)
     raw_keys = os.getenv("GEMINI_API_KEYS", "")
     
-    # 2. ถ้าไม่เจอ (กรณีรันบนมือถือ) ให้เปิดไฟล์ api.env อ่านตรงๆ
+    # 2. ถ้าไม่เจอ (กรณีรันบน Android APK) ให้ลองอ่านจากไฟล์ api.env ตรงๆ
+    # เพราะ Android บางเวอร์ชัน os.getenv จะมองไม่เห็นไฟล์ที่แอปสร้างขึ้นตอน Build
     if not raw_keys and os.path.exists("api.env"):
         try:
-            with open("api.env", "r") as f:
+            with open("api.env", "r", encoding="utf-8") as f:
                 for line in f:
                     if line.startswith("GEMINI_API_KEYS="):
-                        # แยกค่าหลังเครื่องหมายเท่ากับออกมา
+                        # แยกค่าหลังเครื่องหมายเท่ากับและล้างเครื่องหมายคำพูดออก
                         raw_keys = line.split("=")[1].strip().strip('"').strip("'")
                         break
-        except: 
+        except:
             pass
-
+            
     if raw_keys:
         return [k.strip() for k in raw_keys.split(",") if k.strip()]
     return []
 
-# นำคีย์มาใช้ในโปรแกรม
 API_KEYS = get_api_keys()
 AI_MODEL_NAME = 'gemini-flash-latest' 
 
