@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -33,26 +32,25 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install flet google-generativeai cookiecutter
+          pip install flet google-generativeai cookiecutter python-dotenv
+
+      # สร้างไฟล์ .env จาก GitHub Secrets ก่อนเริ่ม Build
+      - name: Create .env file from Secrets
+        run: |
+          echo "GEMINI_API_KEYS=${{ secrets.GEMINI_API_KEYS }}" > .env
 
       - name: Verify Icon
         run: |
-          if [ -f "assets/icon.png" ]; then
-            echo "✅ Icon found"
-          else
-            echo "❌ Error: assets/icon.png not found!"
-            exit 1
-          fi
+          if [ -f "assets/icon.png" ]; then echo "✅ Icon found"; else exit 1; fi
 
+      # สำคัญมาก: เพิ่ม --include-dots เพื่อให้ Flet ยอมดึงไฟล์ .env เข้าไปใน APK
       - name: Build Android APK
         run: |
-          # ใช้ yes | เพื่อตอบตกลงอัตโนมัติ
-          yes | flet build apk --product "The 7th Sense" --org "com.nithoria.the7thsense"
+          yes | flet build apk --product "The 7th Sense" --org "com.nithoria.the7thsense" --include-dots
 
-      # แก้ไขจุดนี้: ระบุ Path แบบเจาะจงให้ระบบหาไฟล์ APK เจอแน่นอน
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: The-7th-Sense-APK
           path: build/apk/*.apk
-          if-no-files-found: error # ถ้าหาไฟล์ไม่เจอ ให้แจ้ง Error ทันทีเพื่อตรวจสอบง่ายขึ้น
+          if-no-files-found: error
