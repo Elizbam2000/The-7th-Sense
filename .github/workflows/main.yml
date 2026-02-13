@@ -1,0 +1,60 @@
+name: Build The 7th Sense APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ติดตั้ง Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # ติดตั้ง Library ที่จำเป็น
+      - name: Install Dependencies
+        run: |
+          pip install flet google-generativeai cookiecutter
+
+      # ตรวจสอบว่ามีไฟล์ไอคอนอยู่จริง (สำคัญมาก)
+      - name: Verify Icon
+        run: |
+          if [ -f "assets/icon.png" ]; then
+            echo "✅ Icon found at assets/icon.png"
+          else
+            echo "❌ Error: assets/icon.png not found!"
+            exit 1
+          fi
+
+      # Build APK
+      # Flet จะนำ assets/icon.png ไปใช้เป็นไอคอนแอปให้อัตโนมัติถ้ามีโฟลเดอร์ assets อยู่
+      - name: Build Android APK
+        run: |
+          flet build apk --product "The 7th Sense" --org "com.nithoria.the7thsense" --verbose
+
+      # อัปโหลดไฟล์ APK ที่ได้
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-7th-Sense-APK
+          path: build/apk/*.apk
