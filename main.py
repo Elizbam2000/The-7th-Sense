@@ -24,18 +24,19 @@ except ImportError:
 load_dotenv()
 
 def get_api_keys():
-    # ลองดึงจากระบบปกติก่อน (สำหรับ PC)
+    # 1. ลองดึงจากระบบปกติ (กรณีรันบนคอมพิวเตอร์)
     raw_keys = os.getenv("GEMINI_API_KEYS", "")
     
-    # ถ้าบนมือถือหาไม่เจอ ให้ลองเปิดไฟล์อ่านตรงๆ
-    if not raw_keys and os.path.exists(".env"):
+    # 2. ถ้าไม่เจอ (กรณีรันบนมือถือ) ให้เปิดไฟล์ api.env อ่านตรงๆ
+    if not raw_keys and os.path.exists("api.env"):
         try:
-            with open(".env", "r") as f:
+            with open("api.env", "r") as f:
                 for line in f:
                     if line.startswith("GEMINI_API_KEYS="):
+                        # แยกค่าหลังเครื่องหมายเท่ากับออกมา
                         raw_keys = line.split("=")[1].strip().strip('"').strip("'")
                         break
-        except:
+        except: 
             pass
 
     if raw_keys:
